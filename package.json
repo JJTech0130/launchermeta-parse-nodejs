@@ -1,0 +1,23 @@
+{
+  "name": "launchermeta-parse-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JJTech0130/launchermeta-parse-nodejs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JJTech0130/launchermeta-parse-nodejs/issues"
+  },
+  "homepage": "https://github.com/JJTech0130/launchermeta-parse-nodejs#readme",
+  "dependencies": {
+    "got": "^11.8.1",
+    "request": "^2.88.2"
+  }
+}
