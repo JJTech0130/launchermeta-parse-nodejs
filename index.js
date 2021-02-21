@@ -1,30 +1,14 @@
 const got = require('got');
-const JSONStream = require('JSONStream');
+const s3 = require("@aws-sdk/client-s3");
 const fs = require('fs/promises');
 const path = require('path');
 const conf = require('./config.json');
 
-const metahost = 'dl.jjtech.dev';
-
-function streamManifest(url, path) {
-    return got.stream(url)
-    .pipe(JSONStream.parse(path));
-}
-
-/*
 async function getManifest(url) {
-    //console.log("[getManifest] Downloading " + url);
-    
     return got(url)
     .then(response => JSON.parse(response.body))
     .catch(e => console.error("Error parsing manifest: " + e.message));
-
-    //let response = await got(url);
-    //let manifest = JSON.parse(response.body);
-    
-    //return manifest;
 }
-*/
 
 async function processManifest(manifest) {
     for (let lib in manifest.libraries) {    
@@ -44,41 +28,30 @@ async function processManifest(manifest) {
 }
 async function processVersion(version) {
     let version_url = new URL(version.url);
-    if (!(version.type.includes('old'))) {
-        let manifest = await getManifest(version_url.href);
-        let new_manifest = await processManifest(manifest);
+    
+    console.log("Queued " + version.id);
 
-        filename = './out' + version_url.pathname;
+    fs.mkdir(path.dirname('./out' + version_url.pathname), { recursive: true })
+    .catch(e => console.error("Error while creating directory: " + e));
 
-        console.log("Creating directory " + path.dirname(filename));
+    getManifest(version_url.href)
+    .then(manifest => processManifest(manifest))
+    .catch(e => console.error("Error processing manifest: " + e))
+    .then(manifest => fs.writeFile('./out' + version_url.pathname, JSON.stringify(manifest, null, 4)))
+    .catch(e => console.error("Error writing manifest: "+ e));
 
-        console.log("Writing manifest to " + filename);
+    version_url.host = conf.new_host;
+    version.url = version_url.href;
 
-        /*fs.mkdir(path.dirname(filename), { recursive: true }, (err) => {
-            if (err) console.log(err);
-            console.log('Created dir');
-        });
-        fs.writeFile(filename,JSON.stringify(new_manifest, null, 4), (err) => {
-            if (err) console.log(err);
-            console.log('wrote file');
-        });*/
-    }
+    return version;
 }
 
-/*
+
 async function main() {
-    let manifest = await getManifest(conf.version_manifest);
-    let versions = manifest.versions;
-
-    versions.forEach(version => processVersion(version));
-}
-*/
-
-function main() {
-    let stream = streamManifest(conf.version_manifest, ['versions', true, 'id']);
-    stream.on('data', function(data) {
-        console.log(data); // Prints all versions
-    });
+    getManifest(conf.version_manifest)
+    .then(manifest => manifest.versions
+        .forEach(version => processVersion(version)))
+    .catch(e => console.error("Error: " + e.message));
 }
 
 main();
