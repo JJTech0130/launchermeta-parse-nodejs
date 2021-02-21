@@ -1,18 +1,30 @@
 const got = require('got');
+const JSONStream = require('JSONStream');
 const fs = require('fs/promises');
 const path = require('path');
 const conf = require('./config.json');
 
 const metahost = 'dl.jjtech.dev';
 
-async function getManifest(url) {
-    console.log("[getManifest] Downloading " + url);
-    
-    let response = await got(url);
-    let manifest = JSON.parse(response.body);
-    
-    return manifest;
+function streamManifest(url, path) {
+    return got.stream(url)
+    .pipe(JSONStream.parse(path));
 }
+
+/*
+async function getManifest(url) {
+    //console.log("[getManifest] Downloading " + url);
+    
+    return got(url)
+    .then(response => JSON.parse(response.body))
+    .catch(e => console.error("Error parsing manifest: " + e.message));
+
+    //let response = await got(url);
+    //let manifest = JSON.parse(response.body);
+    
+    //return manifest;
+}
+*/
 
 async function processManifest(manifest) {
     for (let lib in manifest.libraries) {    
@@ -37,26 +49,36 @@ async function processVersion(version) {
         let new_manifest = await processManifest(manifest);
 
         filename = './out' + version_url.pathname;
+
+        console.log("Creating directory " + path.dirname(filename));
+
         console.log("Writing manifest to " + filename);
-        fs.mkdir(path.dirname(filename), { recursive: true }, (err) => {
+
+        /*fs.mkdir(path.dirname(filename), { recursive: true }, (err) => {
             if (err) console.log(err);
             console.log('Created dir');
         });
         fs.writeFile(filename,JSON.stringify(new_manifest, null, 4), (err) => {
             if (err) console.log(err);
             console.log('wrote file');
-        });
-
-
-        //console.log(manifest);
+        });*/
     }
 }
 
+/*
 async function main() {
     let manifest = await getManifest(conf.version_manifest);
     let versions = manifest.versions;
 
     versions.forEach(version => processVersion(version));
+}
+*/
+
+function main() {
+    let stream = streamManifest(conf.version_manifest, ['versions', true, 'id']);
+    stream.on('data', function(data) {
+        console.log(data); // Prints all versions
+    });
 }
 
 main();
