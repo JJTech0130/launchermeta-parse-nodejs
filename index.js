@@ -12,16 +12,18 @@ async function getManifest(url) {
 
 async function processLib(lib) {
     if (conf.libs.includes(lib.name.split(':')[0])) {
-        console.log(lib.downloads.classifiers['natives-linux'].url);
-    }
-
-    // if our name is (LWJGL) or (LWJGL3)
-        // if we have linux natives
-            // replace the url
+        if (lib.downloads.classifiers['natives-linux'] != undefined) {
+            natives_url = new URL(lib.downloads.classifiers['natives-linux'].url);
+            natives_url.host = conf.new_host;
+            console.log(natives_url);
+            lib.downloads.classifiers['natives-linux'].url = natives_url.href;
             // download the new file from the new url
             // calculate the size and SHA1 hash of the file
             // save the hash and size
-    //return the modified lib
+        }
+    }
+
+    return lib;
 }
 
 async function processManifest(manifest) {
@@ -30,18 +32,6 @@ async function processManifest(manifest) {
     for (let lib in manifest.libraries) {
         processLib(manifest.libraries[lib])
         .catch(e => console.error("Error processing lib: " + e));
-
-        /*
-        if (manifest.libraries[lib].name.includes('org.lwjgl.lwjgl:lwjgl-platform:')) {
-            if (manifest.libraries[lib].downloads.classifiers['natives-linux'] != undefined) {
-                natives_url = new URL(manifest.libraries[lib].downloads.classifiers['natives-linux'].url)
-                natives_url.host = conf.new_host;
-                console.log(natives_url)
-                manifest.libraries[lib].downloads.classifiers['natives-linux'].url = natives_url.href;
-
-            }
-        }
-        */
     }
     return manifest;
 }
