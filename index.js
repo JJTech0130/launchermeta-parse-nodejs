@@ -10,34 +10,51 @@ async function getManifest(url) {
     .catch(e => console.error("Error parsing manifest: " + e.message));
 }
 
+async function processLib(lib){
+    if (lib.name.includes('org.lwjgl.lwjgl:lwjgl-platform:') || lib.name.includes('lwjgl3s name goes here')) {
+        
+    }
+    // if our name is (LWJGL) or (LWJGL3)
+        // if we have linux natives
+            // replace the url
+            // download the new file from the new url
+            // calculate the size and SHA1 hash of the file
+            // save the hash and size
+    //return the modified lib
+}
+
 async function processManifest(manifest) {
-    for (let lib in manifest.libraries) {    
+    for (let lib in manifest.libraries) {
+        processLib(manifest.libraries[lib])
+        .catch(e => console.error("Error processing lib: " + e));
+
+        /*
         if (manifest.libraries[lib].name.includes('org.lwjgl.lwjgl:lwjgl-platform:')) {
             if (manifest.libraries[lib].downloads.classifiers['natives-linux'] != undefined) {
-                natives_url = new URL(manifest.libraries[lib].downloads.classifiers['natives-linux'].url);
+                natives_url = new URL(manifest.libraries[lib].downloads.classifiers['natives-linux'].url)
                 natives_url.host = conf.new_host;
-                
-                //console.log(natives_url.href);
-                
+                console.log(natives_url)
                 manifest.libraries[lib].downloads.classifiers['natives-linux'].url = natives_url.href;
 
             }
         }
+        */
     }
     return manifest;
 }
+
 async function processVersion(version) {
     let version_url = new URL(version.url);
     
     console.log("Queued " + version.id);
 
-    fs.mkdir(path.dirname('./out' + version_url.pathname), { recursive: true })
+    fs.mkdir(path.dirname('./cache' + version_url.pathname), { recursive: true })
     .catch(e => console.error("Error while creating directory: " + e));
 
     getManifest(version_url.href)
     .then(manifest => processManifest(manifest))
     .catch(e => console.error("Error processing manifest: " + e))
-    .then(manifest => fs.writeFile('./out' + version_url.pathname, JSON.stringify(manifest, null, 4)))
+    .then(manifest => fs.writeFile('./cache' + version_url.pathname, JSON.stringify(manifest, null, 4)))
     .catch(e => console.error("Error writing manifest: "+ e));
 
     version_url.host = conf.new_host;
@@ -45,7 +62,6 @@ async function processVersion(version) {
 
     return version;
 }
-
 
 async function main() {
     getManifest(conf.version_manifest)
