@@ -1,4 +1,5 @@
 {
     "version_manifest": "https://launchermeta.mojang.com/mc/game/version_manifest.json",
+    "libs": ["org.lwjgl.lwjgl", "org.lwjgl"],
     "new_host": "dl.jjtech.dev"
 }

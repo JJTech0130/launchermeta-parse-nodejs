@@ -10,10 +10,11 @@ async function getManifest(url) {
     .catch(e => console.error("Error parsing manifest: " + e.message));
 }
 
-async function processLib(lib){
-    if (lib.name.includes('org.lwjgl.lwjgl:lwjgl-platform:') || lib.name.includes('lwjgl3s name goes here')) {
-        
+async function processLib(lib) {
+    if (conf.libs.includes(lib.name.split(':')[0])) {
+        console.log(lib.downloads.classifiers['natives-linux'].url);
     }
+
     // if our name is (LWJGL) or (LWJGL3)
         // if we have linux natives
             // replace the url
@@ -24,6 +25,8 @@ async function processLib(lib){
 }
 
 async function processManifest(manifest) {
+    //libs = manifest.libraries.filter(lib => shouldReplaceLib(lib));
+    
     for (let lib in manifest.libraries) {
         processLib(manifest.libraries[lib])
         .catch(e => console.error("Error processing lib: " + e));
